@@ -63,7 +63,7 @@ public class Schedule {
         if(tempCharacterRoster.size() < 8)
             return false;
 
-        //counts number of characters that can play each sub role
+        //lists number of characters that can play each sub role
         for(Character character : tempCharacterRoster){
             characterRoleCheck.replaceAll((k,v) -> v = false);
             characterRoleCount = 0;
@@ -87,13 +87,12 @@ public class Schedule {
         sortedSubRoleList.sort(Map.Entry.comparingByValue());
 
         //Try to add characters to party depending on role
-        for(List<Character> listOfCharacters : listOfCharacterRoleCount){
-            for(Character character : listOfCharacters){
-                for(Map.Entry<SubRole, Integer> subRoleEntry : sortedSubRoleList){
-                    SubRole subRole = subRoleEntry.getKey();
+        for(Map.Entry<SubRole, Integer> subRoleEntry : sortedSubRoleList){
+            SubRole subRole = subRoleEntry.getKey();
+            for(List<Character> listOfCharacters : listOfCharacterRoleCount){
+                for(Character character : listOfCharacters){
                     if(character.isAbleToRunSubRole(subRole)) {
-                        if (teamValidator.addPlayerToTeam(character, character.getSuitableJob(subRole)))
-                            break;
+                        teamValidator.addPlayerToTeam(character, character.getSuitableJob(subRole));
                     }
                 }
             }

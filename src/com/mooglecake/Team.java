@@ -20,6 +20,9 @@ public class Team {
     private Boolean fullParty, halfParty;
 
     public Boolean addPlayerToTeam(Character character, Job job){
+        if(partyComp.containsKey(character))
+            return false;
+
         if(getJobRole(job) == Role.DPS && dps.size() < 4 && isJobSlotAvailable(job)){
             if (isSubRoleSlotAvailable(getJobSubRole(job)) || (!isSubRoleSlotAvailable(getJobSubRole(job)) && dps.size() == 3)) {
                 dps.add(character);
@@ -30,7 +33,7 @@ public class Team {
             tanks.add(character);
             partyComp.put(character, job);
             return true;
-        } else if (getJobRole(job) == Role.HEALER && tanks.size() < 2 && isJobSlotAvailable(job) && isSubRoleSlotAvailable(getJobSubRole(job))){
+        } else if (getJobRole(job) == Role.HEALER && healers.size() < 2 && isJobSlotAvailable(job) && isSubRoleSlotAvailable(getJobSubRole(job))){
             healers.add(character);
             partyComp.put(character, job);
             return true;
