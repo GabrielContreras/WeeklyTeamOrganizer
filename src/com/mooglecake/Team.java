@@ -17,28 +17,159 @@ public class Team {
     private List<Character> healers = new ArrayList<>();
     private List<Character> dps = new ArrayList<>();
     private Map<Character,Job> partyComp = new HashMap<>();
-    private Boolean fullParty, halfParty;
+    private TimeSlot timeSlot;
 
     public Boolean addPlayerToTeam(Character character, Job job){
+        Character replacementCharacter = null;
+        boolean replacementFound = false;
         if(partyComp.containsKey(character))
             return false;
 
-        if(getJobRole(job) == Role.DPS && dps.size() < 4 && isJobSlotAvailable(job)){
-            if (isSubRoleSlotAvailable(getJobSubRole(job)) || (!isSubRoleSlotAvailable(getJobSubRole(job)) && dps.size() == 3)) {
-                dps.add(character);
+        if(getJobRole(job) == Role.DPS){
+            if(dps.size() < 4 && isJobSlotAvailable(job)) {
+                if (isSubRoleSlotAvailable(getJobSubRole(job)) || (!isSubRoleSlotAvailable(getJobSubRole(job)) && dps.size() == 3 && getJobSubRole(job) == SubRole.MELEE)) {
+                    dps.add(character);
+                    partyComp.put(character, job);
+                    return true;
+                }
+            } else if(character.getAvailableViableTimeSlots() != null){
+                if(!isSubRoleSlotAvailable(getJobSubRole(job)) || dps.size() == 4){
+                    int maxScheduled = 0, maxAvailable = 0;
+
+                    //Check for similar jobs to swap if scheduled run count is lower for character attempting to be added
+                    for(Character dpsChar : dps){
+                        if(job == partyComp.get(dpsChar)){
+                            if(dpsChar.getNumberOfSchedulesRuns() > character.getNumberOfSchedulesRuns() ||
+                                    (dpsChar.getNumberOfSchedulesRuns() == character.getNumberOfSchedulesRuns() && dpsChar.getNumberOfAvailableRuns() > character.getNumberOfAvailableRuns())){
+                                if(maxScheduled < dpsChar.getNumberOfSchedulesRuns() || (maxScheduled == dpsChar.getNumberOfSchedulesRuns() && maxAvailable < dpsChar.getNumberOfAvailableRuns())){
+                                    maxScheduled = dpsChar.getNumberOfSchedulesRuns();
+                                    maxAvailable = dpsChar.getNumberOfAvailableRuns();
+                                    replacementCharacter = dpsChar;
+                                }
+
+                                replacementFound = true;
+                            }
+                        }
+                    }
+                    if(!replacementFound){
+                        for(Character dpsChar : dps) {
+                            if (getJobSubRole(job) == getJobSubRole(partyComp.get(dpsChar))) {
+                                if (dpsChar.getNumberOfSchedulesRuns() > character.getNumberOfSchedulesRuns() ||
+                                        (dpsChar.getNumberOfSchedulesRuns() == character.getNumberOfSchedulesRuns() && dpsChar.getNumberOfAvailableRuns() > character.getNumberOfAvailableRuns())) {
+                                    if(maxScheduled < dpsChar.getNumberOfSchedulesRuns() || (maxScheduled == dpsChar.getNumberOfSchedulesRuns() && maxAvailable < dpsChar.getNumberOfAvailableRuns())){
+                                        maxScheduled = dpsChar.getNumberOfSchedulesRuns();
+                                        maxAvailable = dpsChar.getNumberOfAvailableRuns();
+                                        replacementCharacter = dpsChar;
+                                    }
+
+                                    replacementFound = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (getJobRole(job) == Role.TANK){
+            if(tanks.size() < 2 && isJobSlotAvailable(job)){
+                tanks.add(character);
                 partyComp.put(character, job);
                 return true;
+            } else if(character.getAvailableViableTimeSlots() != null){
+                if(!isSubRoleSlotAvailable(getJobSubRole(job)) || tanks.size() == 2){
+                    int maxScheduled = 0, maxAvailable = 0;
+                    //Check for similar jobs to swap if scheduled run count is lower for character attempting to be added
+                    for(Character tank : tanks){
+                        if(job == partyComp.get(tank)){
+                            if(tank.getNumberOfSchedulesRuns() > character.getNumberOfSchedulesRuns() ||
+                                    (tank.getNumberOfSchedulesRuns() == character.getNumberOfSchedulesRuns() && tank.getNumberOfAvailableRuns() > character.getNumberOfAvailableRuns())){
+                                if(maxScheduled < tank.getNumberOfSchedulesRuns() || (maxScheduled == tank.getNumberOfSchedulesRuns() && maxAvailable < tank.getNumberOfAvailableRuns())){
+                                    maxScheduled = tank.getNumberOfSchedulesRuns();
+                                    maxAvailable = tank.getNumberOfAvailableRuns();
+                                    replacementCharacter = tank;
+                                }
+
+                                replacementFound = true;
+                            }
+                        }
+                    }
+                    if(!replacementFound) {
+                        for (Character tank : tanks) {
+                            if (getJobSubRole(job) == getJobSubRole(partyComp.get(tank))) {
+                                if (tank.getNumberOfSchedulesRuns() > character.getNumberOfSchedulesRuns() ||
+                                        (tank.getNumberOfSchedulesRuns() == character.getNumberOfSchedulesRuns() && tank.getNumberOfAvailableRuns() > character.getNumberOfAvailableRuns())) {
+                                    if(maxScheduled < tank.getNumberOfSchedulesRuns() || (maxScheduled == tank.getNumberOfSchedulesRuns() && maxAvailable < tank.getNumberOfAvailableRuns())){
+                                        maxScheduled = tank.getNumberOfSchedulesRuns();
+                                        maxAvailable = tank.getNumberOfAvailableRuns();
+                                        replacementCharacter = tank;
+                                    }
+
+                                    replacementFound = true;
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        } else if (getJobRole(job) == Role.TANK && tanks.size() < 2 && isJobSlotAvailable(job)){
-            tanks.add(character);
-            partyComp.put(character, job);
-            return true;
-        } else if (getJobRole(job) == Role.HEALER && healers.size() < 2 && isJobSlotAvailable(job) && isSubRoleSlotAvailable(getJobSubRole(job))){
-            healers.add(character);
-            partyComp.put(character, job);
-            return true;
+
+        } else if (getJobRole(job) == Role.HEALER ){
+            if(healers.size() < 2 && isJobSlotAvailable(job) && isSubRoleSlotAvailable(getJobSubRole(job))){
+                healers.add(character);
+                partyComp.put(character, job);
+                return true;
+            } else if(character.getAvailableViableTimeSlots() != null){
+                if(!isSubRoleSlotAvailable(getJobSubRole(job)) || healers.size() == 2){
+                    int maxScheduled = 0, maxAvailable = 0;
+
+                    //Check for similar jobs to swap if scheduled run count is lower for character attempting to be added
+                    for(Character healer : healers){
+                        if(job == partyComp.get(healer)){
+                            if(healer.getNumberOfSchedulesRuns() > character.getNumberOfSchedulesRuns() ||
+                                    (healer.getNumberOfSchedulesRuns() == character.getNumberOfSchedulesRuns() && healer.getNumberOfAvailableRuns() > character.getNumberOfAvailableRuns())){
+                                if(maxScheduled < healer.getNumberOfSchedulesRuns() || (maxScheduled == healer.getNumberOfSchedulesRuns() && maxAvailable < healer.getNumberOfAvailableRuns())){
+                                    maxScheduled = healer.getNumberOfSchedulesRuns();
+                                    maxAvailable = healer.getNumberOfAvailableRuns();
+                                    replacementCharacter = healer;
+                                }
+
+                                replacementFound = true;
+                            }
+                        }
+                    }
+                    if(!replacementFound) {
+                        for (Character healer : healers) {
+                            if (getJobSubRole(job) == getJobSubRole(partyComp.get(healer))) {
+                                if (healer.getNumberOfSchedulesRuns() > character.getNumberOfSchedulesRuns() ||
+                                        (healer.getNumberOfSchedulesRuns() == character.getNumberOfSchedulesRuns() && healer.getNumberOfAvailableRuns() > character.getNumberOfAvailableRuns())) {
+                                    if(maxScheduled < healer.getNumberOfSchedulesRuns() || (maxScheduled == healer.getNumberOfSchedulesRuns() && maxAvailable < healer.getNumberOfAvailableRuns())){
+                                        maxScheduled = healer.getNumberOfSchedulesRuns();
+                                        maxAvailable = healer.getNumberOfAvailableRuns();
+                                        replacementCharacter = healer;
+                                    }
+
+                                    replacementFound = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return false;
+        if(replacementFound){
+            if(healers.contains(replacementCharacter)){
+                healers.add(character);
+                healers.remove(replacementCharacter);
+            } else if (tanks.contains(replacementCharacter)){
+                tanks.add(character);
+                tanks.remove(replacementCharacter);
+            } else if (dps.contains(replacementCharacter)) {
+                dps.add(character);
+                dps.remove(replacementCharacter);
+            }
+            partyComp.remove(replacementCharacter);
+            partyComp.put(character, job);
+        }
+
+        return replacementFound;
     }
 
     public Boolean isPartyFull(){
@@ -53,9 +184,15 @@ public class Team {
     }
 
     private Boolean isSubRoleSlotAvailable(SubRole subRole){
+        int dpsCount = 0;
         for(Job job : partyComp.values()){
-            if(getJobSubRole(job).equals(subRole))
+            if(getJobSubRole(job).equals(subRole)) {
+                if (dpsCount == 0 && (subRole == SubRole.MELEE || subRole == SubRole.CASTER || subRole == SubRole.RANGED)) {
+                    dpsCount++;
+                    continue;
+                }
                 return false;
+            }
         }
         return true;
     }
@@ -70,5 +207,13 @@ public class Team {
 
     public Map<Character, Job> getPartyComp() {
         return partyComp;
+    }
+
+    public void setTimeSlot(TimeSlot timeSlot) {
+        this.timeSlot = timeSlot;
+    }
+
+    public TimeSlot getTimeSlot() {
+        return timeSlot;
     }
 }

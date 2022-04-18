@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Schedule {
-    private final List<Team> scheduledTeams = new ArrayList<>();
+    private List<Team> scheduledTeams = new ArrayList<>();
     private List<TimeSlot> availableTimeSlots = new ArrayList<>();
     private final List<TimeSlot> totalTimeSlots;
     private final List<Character> characterRoster;
@@ -18,6 +18,12 @@ public class Schedule {
         this.characterRoster = characterRoster;
         this.totalTimeSlots = totalTimeSlots;
         generateAvailableTimeSlots();
+        for(Character character : this.characterRoster){
+            character.addAvailableViableTimeSlots(this.availableTimeSlots);
+        }
+        for(TimeSlot timeSlot : this.availableTimeSlots){
+            generateTeam(this.characterRoster, timeSlot, false);
+        }
     }
 
     public List<Team> getScheduledTeams() {
@@ -33,6 +39,20 @@ public class Schedule {
     }
 
     private boolean isTimeSlotViable(List<Character> characterRoster, TimeSlot timeSlot){
+        return generateTeam(characterRoster,timeSlot, true);
+    }
+
+    private Boolean isPartyViable(Map<SubRole,Integer> roleCount){
+        if( (roleCount.get(SubRole.CASTER) + roleCount.get(SubRole.RANGED) + roleCount.get(SubRole.MELEE)) < 4){
+            return false;
+        } else if (roleCount.get(SubRole.PURE) < 1){
+            return false;
+        } else if (roleCount.get(SubRole.SHIELD) < 1){
+            return false;
+        } else return roleCount.get(SubRole.TANK) >= 2;
+    }
+
+    public Boolean generateTeam(List<Character> characterRoster, TimeSlot timeSlot, Boolean validationOnly){
         Map<SubRole,Integer> roleMapCount = new HashMap<>();
         Map<SubRole,Boolean> characterRoleCheck = new HashMap<>();
         List<Character> tempCharacterRoster = new ArrayList<>();
@@ -98,24 +118,24 @@ public class Schedule {
             }
         }
 
-        return teamValidator.isPartyFull();
-    }
-
-    private Boolean isPartyViable(Map<SubRole,Integer> roleCount){
-        if( (roleCount.get(SubRole.CASTER) + roleCount.get(SubRole.RANGED) + roleCount.get(SubRole.MELEE)) < 4){
+        if(validationOnly){
+            return teamValidator.isPartyFull();
+        } else {
+            if(teamValidator.isPartyFull()){
+                for(Character character : teamValidator.getPartyComp().keySet()){
+                    character.increaseScheduledRunCount();
+                }
+                this.scheduledTeams.add(teamValidator);
+                teamValidator.setTimeSlot(timeSlot);
+                return true;
+            }
             return false;
-        } else if (roleCount.get(SubRole.PURE) < 1){
-            return false;
-        } else if (roleCount.get(SubRole.SHIELD) < 1){
-            return false;
-        } else return roleCount.get(SubRole.TANK) >= 2;
-    }
-
-    public List<Team> generateTeams(){
-        return TeamGenerator.generateTeams(characterRoster, availableTimeSlots);
+        }
     }
 
     public List<TimeSlot> getAvailableTimeSlots() {
         return availableTimeSlots;
     }
+
+
 }

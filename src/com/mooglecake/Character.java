@@ -10,8 +10,9 @@ import java.util.*;
 public class Character {
     private final String characterName;
     private final List<Job> jobList;
-    private final List<TimeSlot> availableTimeSlots;
-    private List<TimeSlot> scheduledTimeSlots;
+    private List<TimeSlot> availableTimeSlots = new ArrayList<>();
+    private List<TimeSlot> availableViableTimeSlots = new ArrayList<>();
+    private List<TimeSlot> scheduledTimeSlots = new ArrayList<>();
     private int numberOfScheduledRuns;
     private int numberOfAvailableRuns;
     private boolean scheduledAtLeastOnce;
@@ -25,11 +26,27 @@ public class Character {
         this.scheduledTimeSlots = new ArrayList<>();
     }
 
-    public void increaseRunCount() {
+    public void addAvailableViableTimeSlots(List<TimeSlot> availableTimeSlots){
+        for(TimeSlot timeSlot : availableTimeSlots){
+            if(this.availableTimeSlots.contains(timeSlot)){
+                this.availableViableTimeSlots.add(timeSlot);
+            }
+        }
+        numberOfAvailableRuns = availableViableTimeSlots.size();
+    }
+
+    public void increaseScheduledRunCount() {
         this.numberOfScheduledRuns += 1;
         if(numberOfScheduledRuns == 1){
             this.scheduledAtLeastOnce = true;
         }
+    }
+
+    public void decreaseScheduledRunCount(){
+        if(this.numberOfScheduledRuns == 0)
+            this.scheduledAtLeastOnce = false;
+        else
+            this.numberOfScheduledRuns -= 1;
     }
 
     public void addScheduleTimeSlot(TimeSlot timeSlot) {
@@ -83,8 +100,8 @@ public class Character {
         return availableTimeSlots;
     }
 
-    public void setNumberOfAvailableRuns(int numberOfAvailableRuns) {
-        this.numberOfAvailableRuns = numberOfAvailableRuns;
+    public List<TimeSlot> getAvailableViableTimeSlots() {
+        return availableViableTimeSlots;
     }
 
     @Override
