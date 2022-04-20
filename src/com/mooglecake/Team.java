@@ -19,7 +19,7 @@ public class Team {
     private Map<Character,Job> partyComp = new HashMap<>();
     private TimeSlot timeSlot;
 
-    public Boolean addPlayerToTeam(Character character, Job job){
+    public Boolean addPlayerToTeam(Character character, Job job, boolean softChecking, boolean replacementAcceptable){
         Character replacementCharacter = null;
         boolean replacementFound = false;
         if(partyComp.containsKey(character))
@@ -27,12 +27,12 @@ public class Team {
 
         if(getJobRole(job) == Role.DPS){
             if(dps.size() < 4 && isJobSlotAvailable(job)) {
-                if (isSubRoleSlotAvailable(getJobSubRole(job)) || (!isSubRoleSlotAvailable(getJobSubRole(job)) && dps.size() == 3 && getJobSubRole(job) == SubRole.MELEE)) {
+                if (isSubRoleSlotAvailable(getJobSubRole(job)) || softChecking) { // || (!isSubRoleSlotAvailable(getJobSubRole(job)) && dps.size() == 3 && getJobSubRole(job) == SubRole.MELEE
                     dps.add(character);
                     partyComp.put(character, job);
                     return true;
                 }
-            } else if(character.getAvailableViableTimeSlots() != null){
+            } else if(character.getAvailableViableTimeSlots() != null && replacementAcceptable){
                 if(!isSubRoleSlotAvailable(getJobSubRole(job)) || dps.size() == 4){
                     int maxScheduled = 0, maxAvailable = 0;
 
@@ -74,7 +74,7 @@ public class Team {
                 tanks.add(character);
                 partyComp.put(character, job);
                 return true;
-            } else if(character.getAvailableViableTimeSlots() != null){
+            } else if(character.getAvailableViableTimeSlots() != null && replacementAcceptable){
                 if(!isSubRoleSlotAvailable(getJobSubRole(job)) || tanks.size() == 2){
                     int maxScheduled = 0, maxAvailable = 0;
                     //Check for similar jobs to swap if scheduled run count is lower for character attempting to be added
@@ -116,7 +116,7 @@ public class Team {
                 healers.add(character);
                 partyComp.put(character, job);
                 return true;
-            } else if(character.getAvailableViableTimeSlots() != null){
+            } else if(character.getAvailableViableTimeSlots() != null && replacementAcceptable){
                 if(!isSubRoleSlotAvailable(getJobSubRole(job)) || healers.size() == 2){
                     int maxScheduled = 0, maxAvailable = 0;
 
@@ -184,11 +184,15 @@ public class Team {
     }
 
     private Boolean isSubRoleSlotAvailable(SubRole subRole){
-        int dpsCount = 0;
+        int meleeCount = 0, rangedCount = 0;
         for(Job job : partyComp.values()){
             if(getJobSubRole(job).equals(subRole)) {
-                if (dpsCount == 0 && (subRole == SubRole.MELEE || subRole == SubRole.CASTER || subRole == SubRole.RANGED)) {
-                    dpsCount++;
+                if (meleeCount == 0 && (subRole == SubRole.MELEE)) {
+                    meleeCount++;
+                    continue;
+                }
+                if (rangedCount == 0 && (subRole == SubRole.CASTER || subRole == SubRole.RANGED)){
+                    rangedCount++;
                     continue;
                 }
                 return false;

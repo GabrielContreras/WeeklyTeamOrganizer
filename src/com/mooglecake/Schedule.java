@@ -13,10 +13,12 @@ public class Schedule {
     private List<TimeSlot> availableTimeSlots = new ArrayList<>();
     private final List<TimeSlot> totalTimeSlots;
     private final List<Character> characterRoster;
+    private boolean softChecking;
 
-    public Schedule(List<Character> characterRoster, List<TimeSlot> totalTimeSlots) {
+    public Schedule(List<Character> characterRoster, List<TimeSlot> totalTimeSlots, boolean softChecking) {
         this.characterRoster = characterRoster;
         this.totalTimeSlots = totalTimeSlots;
+        this.softChecking = softChecking;
         generateAvailableTimeSlots();
         for(Character character : this.characterRoster){
             character.addAvailableViableTimeSlots(this.availableTimeSlots);
@@ -106,17 +108,43 @@ public class Schedule {
         List<Map.Entry<SubRole,Integer>> sortedSubRoleList = new ArrayList<>(roleMapCount.entrySet());
         sortedSubRoleList.sort(Map.Entry.comparingByValue());
 
-        //Try to add characters to party depending on role
+        //Try to add characters to party depending on role without replacement
         for(Map.Entry<SubRole, Integer> subRoleEntry : sortedSubRoleList){
             SubRole subRole = subRoleEntry.getKey();
             for(List<Character> listOfCharacters : listOfCharacterRoleCount){
                 for(Character character : listOfCharacters){
                     if(character.isAbleToRunSubRole(subRole)) {
-                        teamValidator.addPlayerToTeam(character, character.getSuitableJob(subRole));
+                        teamValidator.addPlayerToTeam(character, character.getSuitableJob(subRole), false, false);
                     }
                 }
             }
         }
+
+        if(this.softChecking){
+            for(Map.Entry<SubRole, Integer> subRoleEntry : sortedSubRoleList){
+                SubRole subRole = subRoleEntry.getKey();
+                for(List<Character> listOfCharacters : listOfCharacterRoleCount){
+                    for(Character character : listOfCharacters){
+                        if(character.isAbleToRunSubRole(subRole)) {
+                            teamValidator.addPlayerToTeam(character, character.getSuitableJob(subRole), true, false);
+                        }
+                    }
+                }
+            }
+        }
+
+        //Run again and replace anyone that has run more often than others if possible
+        for(Map.Entry<SubRole, Integer> subRoleEntry : sortedSubRoleList){
+            SubRole subRole = subRoleEntry.getKey();
+            for(List<Character> listOfCharacters : listOfCharacterRoleCount){
+                for(Character character : listOfCharacters){
+                    if(character.isAbleToRunSubRole(subRole)) {
+                        teamValidator.addPlayerToTeam(character, character.getSuitableJob(subRole), false, true);
+                    }
+                }
+            }
+        }
+
 
         if(validationOnly){
             return teamValidator.isPartyFull();

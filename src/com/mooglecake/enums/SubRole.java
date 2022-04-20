@@ -20,7 +20,7 @@ public enum SubRole {
             if(job == Job.MNK || job == Job.SAM || job == Job.NIN || job == Job.RPR || job == Job.DRG)
                 return SubRole.MELEE;
             else if(job == Job.RDM || job == Job.BLM || job ==Job.SMN)
-                return SubRole.CASTER;
+                return SubRole.RANGED;
             else
                 return SubRole.RANGED;
         }
