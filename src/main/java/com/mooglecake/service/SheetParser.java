@@ -21,13 +21,7 @@ public class SheetParser {
 
     }
 
-    public List<List<Object>> parseSheets() throws IOException {
-        List<String> ranges = List.of("SingupSheet!A2:P20");
-        String range = "SignupSheet!A2:P20";
-//        BatchGetValuesResponse readResult = sheetsService.spreadsheets().values()
-//                .batchGet(SPREADSHEET_ID)
-//                .setRanges(ranges)
-//                .execute();
+    public List<List<Object>> parseSheets(String range) throws IOException {
 
         ValueRange test = sheetsService.spreadsheets().values()
                 .get(SPREADSHEET_ID,range)
