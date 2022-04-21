@@ -1,22 +1,23 @@
 package com.mooglecake;
 
 import java.time.DayOfWeek;
+import java.util.Objects;
 
 public class TimeSlot {
 
-    final private DayOfWeek weekday;
-    final private int hourOfDay;
+    final private String weekday;
+    final private String hourOfDay;
 
-    public TimeSlot(DayOfWeek weekday, int hourOfDay) {
+    public TimeSlot(String weekday, String hourOfDay) {
         this.weekday = weekday;
         this.hourOfDay = hourOfDay;
     }
 
-    public DayOfWeek getWeekday() {
+    public String getWeekday() {
         return weekday;
     }
 
-    public int getHourOfDay() {
+    public String getHourOfDay() {
         return hourOfDay;
     }
 
@@ -33,8 +34,6 @@ public class TimeSlot {
 
     @Override
     public int hashCode() {
-        int result = weekday != null ? weekday.hashCode() : 0;
-        result = 31 * result + hourOfDay;
-        return result;
+        return Objects.hash(weekday, hourOfDay);
     }
 }
